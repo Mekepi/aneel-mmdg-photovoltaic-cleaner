@@ -1,0 +1,5 @@
+# Core
+urllib3>=1.26.0  # HTTP client
+
+# Development extras (optional)
+mypy>=0.900 
