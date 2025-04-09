@@ -26,7 +26,6 @@ venv/
 /failed-*.csv             # Error logs from read_search_failure()
 /no-*-unified.csv         # Partial outputs from unify_by_ceg()
 /out-of-bounds-coords.csv # Invalid coordinate reports
-/retry.dat                # Temporary retry lists
 
 # ---------------------------
 # IDE & Development
@@ -41,4 +40,3 @@ venv/
 # ---------------------------
 .DS_Store
 Thumbs.db
-*.log
