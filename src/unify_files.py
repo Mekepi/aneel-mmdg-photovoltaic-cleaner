@@ -5,14 +5,14 @@ from collections import defaultdict
 from urllib3 import request
 
 
-def read_search_failure(coords_path:Path, expected_columns:int) -> None:
+def read_search_failure(file:Path, expected_columns:int, encoding:str='ansi') -> None:
     t0:float = perf_counter()
 
-    with open("%s\\data\\raw\\%s"%(Path(dirname(abspath(__file__))).parent, coords_path), 'r', 1024*1024*1024, encoding='ansi') as f:
+    with open(file, 'r', 1024*1024*1024, encoding=encoding) as f:
         failed:list[str] = [line for line in f if len(line.split('";"')) != expected_columns]
             
     if (failed):
-        with open("%s\\data\\error\\failed-%s"%(Path(dirname(abspath(__file__))).parent, coords_path), 'w', 1024*1024*8, encoding='utf-8') as fout:
+        with open(file, 'w', 1024*1024*8, encoding='utf-8') as fout:
             fout.writelines(failed)
     
     print("failed: %i"%(len(failed)))
@@ -165,7 +165,7 @@ def main() -> None:
     ]
     
     for file in files:
-        read_search_failure(*file[:2])
+        read_search_failure(Path("%s%s%s"%(Path(dirname(abspath(__file__))).parent,'\\data\\raw\\',file[0])), file[1])
     
     # Etapa 3: unificar os arquivos pelo ceg, excluindo colunas desnecessárias, as reorganizando e sepando linhas com problemas.
     # O número do arquivo erro é dado por não ter: geocódigo (+1), coordenadas(+3)
@@ -173,9 +173,7 @@ def main() -> None:
     unify_by_ceg(files, [8,4,14,15,16,20,25,23,26,21,24,27,22,11,2,3,10,6,7,5,0,1,17,19,18,12,13,9])
 
     unified:Path = Path("empreendimento-gd-unified.csv")
-
-    # Por fim, checar a qualidade do arquivo unificado.
-    #read_search_failure(unified, 28)
+    read_search_failure(Path("%s%s%s"%(Path(dirname(abspath(__file__))).parent,'\\data\\processed\\',unified)), 28)
 
     # A partir daqui, vamos testar a qualidade dos dados e consertar informações que não fazem sentido:
     """ fix_columns(unified) """
