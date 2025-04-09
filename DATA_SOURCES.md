@@ -21,11 +21,6 @@
    - **Content**: PV system technical details (modules, inverters)  
    - **Direct Download**: [CSV File](https://dadosabertos.aneel.gov.br/dataset/5e0fafd2-21b9-4d5b-b622-40438d40aba2/resource/49fa9ca0-f609-4ae3-a6f7-b97bd0945a3a/download/empreendimento-gd-informacoes-tecnicas-fotovoltaica.csv)
 
-## Usage Notes
-1. **Preprocessing**:  
-   - This tool directly downloads from the above links in `/data/raw/`.  
-   - Column names must remain unchanged for the cleaner to work.
-
-2. **Attribution**:  
+**Attribution**:  
    When using this data, cite:  
    > "Brazilian Electricity Regulatory Agency (ANEEL), Distributed Generation Registry [Year]. Available at: [dataset URL]"
