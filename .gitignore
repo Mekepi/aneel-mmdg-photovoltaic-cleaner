@@ -15,8 +15,10 @@ venv/
 # ---------------------------
 /data/raw/*               # Exclude original ANEEL CSVs (often large)
 !/data/raw/.gitkeep       # Preserve folder structure
-/data/processed/*.csv     # Exclude processed outputs (users will generate these)
+/data/processed/*         # Exclude processed outputs (users will generate these)
 !/data/processed/.gitkeep
+/data/error/*
+!/data/error/.gitkeep
 
 # ---------------------------
 # ANEEL-Specific Temporary Files
