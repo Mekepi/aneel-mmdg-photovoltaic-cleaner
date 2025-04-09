@@ -81,8 +81,8 @@ def unify_by_ceg(files:list[tuple[Path, int, list[int], int, int, str]], reorder
 
 def fix_columns(file:Path) -> None:
     
-    with open('%s\\%s'%(dirname(abspath(__file__)), file), 'r', encoding='ansi') as fin:
-        with open('%s\\empreendimento-gd-unified-fixed-coords.csv'%(dirname(abspath(__file__))), 'w', encoding='ansi') as fout:
+    with open('%s\\data\\processed\\%s'%(Path(dirname(abspath(__file__))).parent, file), 'r', encoding='utf-8') as fin:
+        with open('%s\\data\\processed\\empreendimento-gd-unified-fixed-coords.csv'%(Path(dirname(abspath(__file__))).parent), 'w', encoding='utf-8') as fout:
             header:str = fin.readline()
             fout.write(header)
 
@@ -98,7 +98,7 @@ def fix_columns(file:Path) -> None:
                 outofbounds.append(line)
 
     if (outofbounds):
-        with open('%s\\out-of-bounds-coords.csv'%(dirname(abspath(__file__))), 'w', 1024*1024*256, encoding='ansi') as fout:
+        with open('%s\\data\\error\\out-of-bounds-coords.csv'%(Path(dirname(abspath(__file__))).parent), 'w', 1024*1024*256, encoding='utf-8') as fout:
             fout.write(header)
             fout.writelines(outofbounds)
 
@@ -141,15 +141,19 @@ def main() -> None:
     # Arquivo 1: 33 colunas, [0,1,3,6,7,9,10,11,12,14,18,22,25]
     # Arquivo 2: 12 colunas, [0,1,3,6]
 
-    with open("%s\\data\\raw\\%s"%(Path(dirname(abspath(__file__))).parent, "empreendimento-geracao-distribuida.csv"), 'r', encoding='ansi') as f:
-        header:list[str] = f.readline().split('";"')
+    """ with open("%s\\data\\raw\\%s"%(Path(dirname(abspath(__file__))).parent, "empreendimento-geracao-distribuida.csv"), 'r', encoding='ansi') as f:
+        lines:list[str] = f.readlines()
+        header:list[str] = lines[0].split('";"')
         print(*[(i, header[i]) for i in range(len(header))], '\n\n')
-        print(f.readline())
+        print(len(lines))
+        print(lines[1])
 
     with open("%s\\data\\raw\\%s"%(Path(dirname(abspath(__file__))).parent, "empreendimento-gd-informacoes-tecnicas-fotovoltaica.csv"), 'r', encoding='ansi') as f:
-        header = f.readline().split('";"')
+        lines = f.readlines()
+        header = lines[0].split('";"')
         print(*[(i, header[i]) for i in range(len(header))], '\n\n')
-        print(f.readline())
+        print(len(lines))
+        print(lines[1]) """
     
 
     # Etapa 2: verificar a uniformidade de ambos os arquivos.
@@ -175,8 +179,8 @@ def main() -> None:
     unified:Path = Path("empreendimento-gd-unified.csv")
     read_search_failure(Path("%s%s%s"%(Path(dirname(abspath(__file__))).parent,'\\data\\processed\\',unified)), 28)
 
-    # A partir daqui, vamos testar a qualidade dos dados e consertar informações que não fazem sentido:
-    """ fix_columns(unified) """
+    # Etapa 4: testar a qualidade dos dados e consertar informações que não fazem sentido:
+    fix_columns(unified)
 
     #split_block(Path('empreendimento-gd-unified-fixed-coords.csv'))
 
