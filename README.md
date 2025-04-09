@@ -15,5 +15,5 @@
 - For proper execution of all scripts, you must follow all src/main.py steps and read the comments thoughtfully.
 
 ## Data Sources
-- Download Links: See [DATA_SOURCES.md](README.md) for direct URLs and version history.
+- Download Links: See [DATA_SOURCES.md](DATA_SOURCES.md) for direct URLs and version history.
 - License: CC-BY 4.0 (Attribution required).
