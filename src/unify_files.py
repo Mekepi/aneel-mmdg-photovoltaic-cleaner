@@ -104,13 +104,13 @@ def fix_columns(file:Path) -> None:
 
 
 def split_block(path:Path) -> None:
-    with open('%s\\%s'%(dirname(abspath(__file__)), path), 'r', 1024*1024*1024, encoding='ansi') as fin:
+    with open('%s\\data\\processed\\%s'%(Path(dirname(abspath(__file__))).parent, path), 'r', 1024*1024*1024, encoding='utf-8') as fin:
         header:str = fin.readline()
         lines:list[str] = fin.readlines()
     
     blocks:int = len(lines)//800_000
     for i in range(1, blocks+1):
-        with open('%s\\block%i.csv'%(dirname(abspath(__file__)), i), 'w', 1024*1024*1024, encoding='ansi') as fout:
+        with open('%s\\data\\processed\\block[%i].csv'%(Path(dirname(abspath(__file__))).parent, i), 'w', 1024*1024*1024, encoding='utf-8') as fout:
             fout.write(header)
             fout.writelines(lines[len(lines)*(i-1)//blocks:len(lines)*(i)//blocks])
 
@@ -141,7 +141,7 @@ def main() -> None:
     # Arquivo 1: 33 colunas, [0,1,3,6,7,9,10,11,12,14,18,22,25]
     # Arquivo 2: 12 colunas, [0,1,3,6]
 
-    """ with open("%s\\data\\raw\\%s"%(Path(dirname(abspath(__file__))).parent, "empreendimento-geracao-distribuida.csv"), 'r', encoding='ansi') as f:
+    with open("%s\\data\\raw\\%s"%(Path(dirname(abspath(__file__))).parent, "empreendimento-geracao-distribuida.csv"), 'r', encoding='ansi') as f:
         lines:list[str] = f.readlines()
         header:list[str] = lines[0].split('";"')
         print(*[(i, header[i]) for i in range(len(header))], '\n\n')
@@ -153,7 +153,7 @@ def main() -> None:
         header = lines[0].split('";"')
         print(*[(i, header[i]) for i in range(len(header))], '\n\n')
         print(len(lines))
-        print(lines[1]) """
+        print(lines[1])
     
 
     # Etapa 2: verificar a uniformidade de ambos os arquivos.
@@ -182,7 +182,7 @@ def main() -> None:
     # Etapa 4: testar a qualidade dos dados e consertar informações que não fazem sentido:
     fix_columns(unified)
 
-    #split_block(Path('empreendimento-gd-unified-fixed-coords.csv'))
+    split_block(Path('empreendimento-gd-unified-fixed-coords.csv'))
 
 if __name__ == "__main__":
     main()
