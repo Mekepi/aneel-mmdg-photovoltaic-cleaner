@@ -28,7 +28,7 @@ def unify_by_ceg(files:list[tuple[Path, int, list[int], int, int, str]], reorder
     header:str = ''
 
     for i in range(len(files)):
-        with open("%s\\%s"%(dirname(abspath(__file__)), files[i][0]), 'r', encoding='ansi') as fin:
+        with open("%s\\data\\raw\\%s"%(Path(dirname(abspath(__file__))).parent, files[i][0]), 'r', encoding='ansi') as fin:
             preheader:list[str] = fin.readline()[1:-2].split('";"')
             header += '"'+'";"'.join([preheader[j] for j in files[i][2]])+'";'
 
@@ -65,15 +65,15 @@ def unify_by_ceg(files:list[tuple[Path, int, list[int], int, int, str]], reorder
     header = '"'+'";"'.join([preheader[i] for i in reorder])+'"\n'
 
     if (no_ceg):
-        with open("%s\\no-ceg.csv"%(dirname(abspath(__file__))), 'w', 1024*1024*256, encoding='ansi') as fout:
+        with open("%s\\data\\error\\no-ceg.csv"%(Path(dirname(abspath(__file__))).parent), 'w', 1024*1024*256, encoding='utf-8') as fout:
             fout.writelines(no_ceg)
     
     for i in no_dict.keys():
-        with open("%s\\no-%i-unified.csv"%(dirname(abspath(__file__)), i), 'w', 1024*1024*256, encoding='ansi') as fout:
+        with open("%s\\data\\error\\no-%i-unified.csv"%(Path(dirname(abspath(__file__))).parent, i), 'w', 1024*1024*256, encoding='utf-8') as fout:
             fout.write(header)
             fout.writelines(no_dict[i])
 
-    with open("%s\\empreendimento-gd-unified.csv"%(dirname(abspath(__file__))), 'w', 1024*1024*1024, encoding='ansi') as fout:
+    with open("%s\\data\\processed\\empreendimento-gd-unified.csv"%(Path(dirname(abspath(__file__))).parent), 'w', 1024*1024*1024, encoding='utf-8') as fout:
         fout.write(header)
         fout.writelines([cegs[key] for key in clean])
     
@@ -170,7 +170,7 @@ def main() -> None:
     # Com as devidas informações em mãos, podemos unificar os arquivos pelo ceg, excluindo colunas desnecessárias, as reorganizando e sepando linhas com problemas.
     # O número do arquivo erro é dado por não ter: geocódigo (+1), coordenadas(+3)
 
-    """ unify_by_ceg(files, [8,4,14,15,16,20,25,23,26,21,24,27,22,11,2,3,10,6,7,5,0,1,17,19,18,12,13,9]) """
+    unify_by_ceg(files, [8,4,14,15,16,20,25,23,26,21,24,27,22,11,2,3,10,6,7,5,0,1,17,19,18,12,13,9])
 
     unified:Path = Path("empreendimento-gd-unified.csv")
 
