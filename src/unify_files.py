@@ -167,7 +167,7 @@ def main() -> None:
     for file in files:
         read_search_failure(*file[:2])
     
-    # Com as devidas informações em mãos, podemos unificar os arquivos pelo ceg, excluindo colunas desnecessárias, as reorganizando e sepando linhas com problemas.
+    # Etapa 3: unificar os arquivos pelo ceg, excluindo colunas desnecessárias, as reorganizando e sepando linhas com problemas.
     # O número do arquivo erro é dado por não ter: geocódigo (+1), coordenadas(+3)
 
     unify_by_ceg(files, [8,4,14,15,16,20,25,23,26,21,24,27,22,11,2,3,10,6,7,5,0,1,17,19,18,12,13,9])
