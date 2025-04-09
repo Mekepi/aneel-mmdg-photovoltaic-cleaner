@@ -2,18 +2,17 @@ from time import perf_counter
 from os.path import dirname, abspath
 from pathlib import Path
 from collections import defaultdict
+from urllib3 import request
 
 
 def read_search_failure(coords_path:Path, expected_columns:int) -> None:
     t0:float = perf_counter()
 
-    pgr_path = dirname(abspath(__file__))
-
-    with open("%s\\%s"%(pgr_path, coords_path), 'r', 1_073_741_824, encoding='ansi') as f:
+    with open("%s\\data\\raw\\%s"%(Path(dirname(abspath(__file__))).parent, coords_path), 'r', 1024*1024*1024, encoding='ansi') as f:
         failed:list[str] = [line for line in f if len(line.split('";"')) != expected_columns]
             
     if (failed):
-        with open("%s\\failed-%s"%(pgr_path,coords_path), 'w', 1_073_741_824, encoding='ansi') as fout:
+        with open("%s\\data\\error\\failed-%s"%(Path(dirname(abspath(__file__))).parent, coords_path), 'w', 1024*1024*8, encoding='utf-8') as fout:
             fout.writelines(failed)
     
     print("failed: %i"%(len(failed)))
@@ -118,26 +117,45 @@ def split_block(path:Path) -> None:
         
 
 def main() -> None:
-    # Primeiramente descobrir o seprador, número de colunas e as colunas de não interesse de cada arquivo
+    # Etapa 0: Obter os dados:
+
+    t0:float = perf_counter()
+    try: raw = open("%s\\data\\raw\\%s"%(Path(dirname(abspath(__file__))).parent, "empreendimento-gd-informacoes-tecnicas-fotovoltaica.csv"), 'bx')
+    except FileExistsError: None
+    except Exception as e: raise e
+    else:
+        raw.write(request('GET', 'https://dadosabertos.aneel.gov.br/dataset/5e0fafd2-21b9-4d5b-b622-40438d40aba2/resource/49fa9ca0-f609-4ae3-a6f7-b97bd0945a3a/download/empreendimento-gd-informacoes-tecnicas-fotovoltaica.csv', preload_content=False, retries=False, timeout=None).data)
+        raw.close()
+    print(perf_counter()-t0)
+    t0 = perf_counter()
+    try: raw = open("%s\\data\\raw\\%s"%(Path(dirname(abspath(__file__))).parent, "empreendimento-geracao-distribuida.csv"), 'bx')
+    except FileExistsError: None
+    except Exception as e: raise e
+    else:
+        raw.write(request('GET', 'https://dadosabertos.aneel.gov.br/dataset/5e0fafd2-21b9-4d5b-b622-40438d40aba2/resource/b1bd71e7-d0ad-4214-9053-cbd58e9564a7/download/empreendimento-geracao-distribuida.csv', preload_content=False, retries=False, timeout=None).data)
+        raw.close()
+    print(perf_counter()-t0)
+    
+    # Etapa 1: descobrir o seprador, número de colunas e as colunas de não interesse de cada arquivo
     # Para ambos arquivos, o separador é '";"'.
     # Arquivo 1: 33 colunas, [0,1,3,6,7,9,10,11,12,14,18,22,25]
     # Arquivo 2: 12 colunas, [0,1,3,6]
 
-    """ with open("%s\\%s"%(dirname(abspath(__file__)), Path("empreendimento-geracao-distribuida.csv")), 'r') as f:
+    with open("%s\\data\\raw\\%s"%(Path(dirname(abspath(__file__))).parent, "empreendimento-geracao-distribuida.csv"), 'r', encoding='ansi') as f:
         header:list[str] = f.readline().split('";"')
         print(*[(i, header[i]) for i in range(len(header))], '\n\n')
         print(f.readline())
 
-    with open("%s\\%s"%(dirname(abspath(__file__)), Path("empreendimento-gd-informacoes-tecnicas-fotovoltaica.csv")), 'r') as f:
+    with open("%s\\data\\raw\\%s"%(Path(dirname(abspath(__file__))).parent, "empreendimento-gd-informacoes-tecnicas-fotovoltaica.csv"), 'r', encoding='ansi') as f:
         header = f.readline().split('";"')
         print(*[(i, header[i]) for i in range(len(header))], '\n\n')
         print(f.readline())
-     """
+    
 
-    # Em seguida verificar a uniformidade de ambos os arquivos.
+    # Etapa 2: verificar a uniformidade de ambos os arquivos.
 
-    # Apenas o arquivo dois possuía problemas.
-    # Os primeiros empreendimentos não tinham ceg e 3 linhas quebradas por \n em uma das colunas.
+    # Apenas o arquivo 'informacoes-tecnicas-fotovoltaica' possui problemas crônicos estruturais até o momento.
+    # Os primeiros empreendimentos não têm ceg e 3 linhas quebradas por '\n' na coluna (10, 'NomModeloModulo').
     # Sendo assim, o arquivo original foi corrigido manualmente e as poucas linhas sem ceg no começo foram separadas.
 
     files:list[tuple[Path, int, list[int], int, int, str]] = [
@@ -145,8 +163,8 @@ def main() -> None:
         (Path("empreendimento-gd-informacoes-tecnicas-fotovoltaica.csv"), 12, list(set(range(12))-set([0,1,3,6])), 1, -1, '')
     ]
     
-    """ for file in files:
-        read_search_failure(*file[:2]) """
+    for file in files:
+        read_search_failure(*file[:2])
     
     # Com as devidas informações em mãos, podemos unificar os arquivos pelo ceg, excluindo colunas desnecessárias, as reorganizando e sepando linhas com problemas.
     # O número do arquivo erro é dado por não ter: geocódigo (+1), coordenadas(+3)
@@ -161,7 +179,7 @@ def main() -> None:
     # A partir daqui, vamos testar a qualidade dos dados e consertar informações que não fazem sentido:
     """ fix_columns(unified) """
 
-    split_block(Path('empreendimento-gd-unified-fixed-coords.csv'))
+    #split_block(Path('empreendimento-gd-unified-fixed-coords.csv'))
 
 if __name__ == "__main__":
     main()
