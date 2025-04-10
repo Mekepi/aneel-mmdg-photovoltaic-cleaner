@@ -12,7 +12,7 @@
 
 
 ## 📜 Critical Usage Notice
-- For proper execution of all scripts, you must follow all [`main()`](src/unify_files.py#L119-L185) steps and read the comments thoughtfully.
+- For proper execution of all scripts, you must follow all [`main()`](src/main.py#L11-L78) steps and read the comments thoughtfully.
 
 ## Data Sources
 - Download Links: See [DATA_SOURCES.md](DATA_SOURCES.md) for direct URLs and version history.

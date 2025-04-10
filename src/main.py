@@ -1,120 +1,12 @@
 from time import perf_counter
 from os.path import dirname, abspath
 from pathlib import Path
-from collections import defaultdict
 from urllib3 import request
 
+from validator import read_search_failure, fix_columns
+from unify_by_ceg import unify_by_ceg
+from splitter import split_block
 
-def read_search_failure(file:Path, expected_columns:int, encoding:str='ansi') -> None:
-    t0:float = perf_counter()
-
-    with open(file, 'r', 1024*1024*1024, encoding=encoding) as f:
-        failed:list[str] = [line for line in f if len(line.split('";"')) != expected_columns]
-            
-    if (failed):
-        with open(file, 'w', 1024*1024*8, encoding='utf-8') as fout:
-            fout.writelines(failed)
-    
-    print("failed: %i"%(len(failed)))
-    print("execution time: %.2f"%(perf_counter()-t0))
-
-def unify_by_ceg(files:list[tuple[Path, int, list[int], int, int, str]], reorder:list[int]) -> None:
-    t0:float = perf_counter()
-
-    cegs:defaultdict[str,str] = defaultdict(str)
-    no_dict:defaultdict[int, list[str]] = defaultdict(list[str])
-    no_ceg:list[str] = []
-    clean:list[str] = []
-    header:str = ''
-
-    for i in range(len(files)):
-        with open("%s\\data\\raw\\%s"%(Path(dirname(abspath(__file__))).parent, files[i][0]), 'r', encoding='ansi') as fin:
-            preheader:list[str] = fin.readline()[1:-2].split('";"')
-            header += '"'+'";"'.join([preheader[j] for j in files[i][2]])+'";'
-
-            for line in fin:
-                data:list[str] = line[1:-2].split('";"')
-
-                if ((files[i][4]>-1 and data[files[i][4]] != files[i][5])):
-                    continue
-
-                if (not(data[files[i][3]])):
-                    no_ceg.append(line)
-                    continue
-                
-                cegs[data[files[i][3]]] += '"'+'";"'.join([data[j] for j in files[i][2]])+'";'
-
-                if (i==len(files)-1):
-                    data = cegs[data[files[i][3]]][1:-2].split('";"')
-                    data = [data[j] for j in reorder]
-                
-                    mark:int = 0
-                    if (not(data[1])):
-                        mark += 1
-                    if (not(data[2] and data[3])):
-                        mark += 3
-                    
-                    if (mark>0):
-                        no_dict[mark].append('"'+'";"'.join(data)+'"\n')
-                        continue
-
-                    cegs[data[0]] = '"'+'";"'.join(data)+'"\n'
-                    clean.append(data[0])
-    
-    preheader = header[1:-2].split('";"')
-    header = '"'+'";"'.join([preheader[i] for i in reorder])+'"\n'
-
-    if (no_ceg):
-        with open("%s\\data\\error\\no-ceg.csv"%(Path(dirname(abspath(__file__))).parent), 'w', 1024*1024*256, encoding='utf-8') as fout:
-            fout.writelines(no_ceg)
-    
-    for i in no_dict.keys():
-        with open("%s\\data\\error\\no-%i-unified.csv"%(Path(dirname(abspath(__file__))).parent, i), 'w', 1024*1024*256, encoding='utf-8') as fout:
-            fout.write(header)
-            fout.writelines(no_dict[i])
-
-    with open("%s\\data\\processed\\empreendimento-gd-unified.csv"%(Path(dirname(abspath(__file__))).parent), 'w', 1024*1024*1024, encoding='utf-8') as fout:
-        fout.write(header)
-        fout.writelines([cegs[key] for key in clean])
-    
-    print(perf_counter()-t0)
-
-def fix_columns(file:Path) -> None:
-    
-    with open('%s\\data\\processed\\%s'%(Path(dirname(abspath(__file__))).parent, file), 'r', encoding='utf-8') as fin:
-        with open('%s\\data\\processed\\empreendimento-gd-unified-fixed-coords.csv'%(Path(dirname(abspath(__file__))).parent), 'w', encoding='utf-8') as fout:
-            header:str = fin.readline()
-            fout.write(header)
-
-            outofbounds:list[str] = []
-            for line in fin:
-                data:list[str] = line.split('";"')
-                if (-90<=float('.'.join(data[2].split(',')))<=90 and -180<=float('.'.join(data[3].split(',')))<=180):
-                    fout.write(line)
-                    continue
-                data[2] = data[2].split(',')[0][:-2]+','+data[2].split(',')[0][-2:]
-                data[3] = data[3].split(',')[0][:-2]+','+data[3].split(',')[0][-2:]
-                fout.write('";"'.join(data))
-                outofbounds.append(line)
-
-    if (outofbounds):
-        with open('%s\\data\\error\\out-of-bounds-coords.csv'%(Path(dirname(abspath(__file__))).parent), 'w', 1024*1024*256, encoding='utf-8') as fout:
-            fout.write(header)
-            fout.writelines(outofbounds)
-
-
-def split_block(path:Path) -> None:
-    with open('%s\\data\\processed\\%s'%(Path(dirname(abspath(__file__))).parent, path), 'r', 1024*1024*1024, encoding='utf-8') as fin:
-        header:str = fin.readline()
-        lines:list[str] = fin.readlines()
-    
-    blocks:int = len(lines)//800_000
-    for i in range(1, blocks+1):
-        with open('%s\\data\\processed\\block[%i].csv'%(Path(dirname(abspath(__file__))).parent, i), 'w', 1024*1024*1024, encoding='utf-8') as fout:
-            fout.write(header)
-            fout.writelines(lines[len(lines)*(i-1)//blocks:len(lines)*(i)//blocks])
-
-        
 
 def main() -> None:
     # Etapa 0: Obter os dados:
@@ -160,8 +52,8 @@ def main() -> None:
 
     # Apenas o arquivo 'informacoes-tecnicas-fotovoltaica' possui problemas crônicos estruturais até o momento.
     # Os primeiros empreendimentos não têm ceg e 3 linhas quebradas por '\n' na coluna (10, 'NomModeloModulo').
-    # Sendo assim, o arquivo original foi corrigido manualmente através da busca das linhas com ceg igual aos erros encontrados 
-    # e as poucas linhas sem ceg no começo foram separadas.
+    # Sendo assim, o arquivo original deve ser corrigido manualmente através da busca das linhas com o ceg igual aos erros encontrados 
+    # e as poucas linhas sem ceg no começo devem ser separadas.
 
     files:list[tuple[Path, int, list[int], int, int, str]] = [
         (Path("empreendimento-geracao-distribuida.csv"), 33, list(set(range(33))-set([0,1,3,6,7,9,10,11,12,14,18,22,25])), 19, 24, 'UFV'),
@@ -182,6 +74,7 @@ def main() -> None:
     # Etapa 4: testar a qualidade dos dados e consertar informações que não fazem sentido:
     fix_columns(unified)
 
+    # Opcional: separar o arquivo em blocos menores para outras formas de análise.
     split_block(Path('empreendimento-gd-unified-fixed-coords.csv'))
 
 if __name__ == "__main__":
