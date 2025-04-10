@@ -52,8 +52,8 @@ def main() -> None:
 
     # Apenas o arquivo 'informacoes-tecnicas-fotovoltaica' possui problemas crônicos estruturais até o momento.
     # Os primeiros empreendimentos não têm ceg e 3 linhas quebradas por '\n' na coluna (10, 'NomModeloModulo').
-    # Sendo assim, o arquivo original foi corrigido manualmente através da busca das linhas com ceg igual aos erros encontrados 
-    # e as poucas linhas sem ceg no começo foram separadas.
+    # Sendo assim, o arquivo original deve ser corrigido manualmente através da busca das linhas com o ceg igual aos erros encontrados 
+    # e as poucas linhas sem ceg no começo devem ser separadas.
 
     files:list[tuple[Path, int, list[int], int, int, str]] = [
         (Path("empreendimento-geracao-distribuida.csv"), 33, list(set(range(33))-set([0,1,3,6,7,9,10,11,12,14,18,22,25])), 19, 24, 'UFV'),
@@ -74,6 +74,7 @@ def main() -> None:
     # Etapa 4: testar a qualidade dos dados e consertar informações que não fazem sentido:
     fix_columns(unified)
 
+    # Opcional: separar o arquivo em blocos menores para outras formas de análise.
     split_block(Path('empreendimento-gd-unified-fixed-coords.csv'))
 
 if __name__ == "__main__":
